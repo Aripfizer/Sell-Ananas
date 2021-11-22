@@ -34,14 +34,4 @@ public class VenteAnanasApplication {
 		SpringApplication.run(VenteAnanasApplication.class, args);
 	}
 
-
-	@Bean
-	CommandLineRunner run(RoleRepository roleRepository, UserRepository userRepository) {
-		return args -> {
-			Role role1 = roleRepository.save(new Role("ROLE_USER"));
-			Role role2 = roleRepository.save(new Role("ROLE_ADMIN"));
-		};
-	}
-
-
 }
