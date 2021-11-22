@@ -2,13 +2,10 @@ package UAC.IFRI.GROUPE4.VenteAnanas.Models;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sun.javafx.geom.transform.Identity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.validator.constraints.Length;
 
 import javax.persistence.*;
