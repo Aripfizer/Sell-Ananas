@@ -3,17 +3,15 @@ package UAC.IFRI.GROUPE4.VenteAnanas.Models.ModelRequest;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.validation.constraints.NotNull;
-
+import org.springframework.lang.Nullable;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 public class PutPasswordField
 {
-    @NotNull
+    @Nullable
     private String currentPassword;
-    @NotNull
+    @Nullable
     private String newPassword;
 }

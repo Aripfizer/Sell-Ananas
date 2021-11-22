@@ -13,14 +13,9 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 public class OrderItemRequest
 {
-    @NotNull(message = "L'email du user est requis")
-    private String email;
-
     @NotNull(message = "Entrer l'id du produit")
     private Long id;
-
     @NotNull(message = "La quatité du produit est requis")
     @Min(value = 1, message = "Selectionner au moin 1 produit")
     private int quantityProduct;
-
 }

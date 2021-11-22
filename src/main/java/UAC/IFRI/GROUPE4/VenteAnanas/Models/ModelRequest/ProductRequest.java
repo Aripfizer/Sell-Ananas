@@ -18,6 +18,7 @@ public class ProductRequest
     private double montant;
     @Nullable
     private String description;
-    @Nullable
+    @NotNull
     private Long categorie;
+
 }

@@ -24,9 +24,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Optional;
 
-
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/api")
 public class UserController {
@@ -41,8 +42,27 @@ public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
+    @GetMapping("/user/me/role")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Role> getCurrentUserRole(@CurrentUser UserPrincipal currentUser) {
+
+        Optional<User> user = userRepository.findByEmail(currentUser.getEmail());
+
+        List<Role> roleList = user.get().getRoles();
+        for (Role role : roleList)
+        {
+            if(role.getName().equals(RoleName.ROLE_ADMIN))
+            {
+
+                return new ResponseEntity<>(roleRepository.findByName(RoleName.ROLE_ADMIN).get(), HttpStatus.OK);
+            }
+        }
+        return new ResponseEntity<>(roleRepository.findByName(RoleName.ROLE_USER).get(), HttpStatus.OK);
+
+    }
+
     @GetMapping("/user/me")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasRole('USER')")
     public UserResponse getCurrentUser(@CurrentUser UserPrincipal currentUser) {
         UserResponse userSummary = new UserResponse(currentUser.getId(),currentUser.getUsername(), currentUser.getLastName(), currentUser.getFirstName(), currentUser.getEmail(),currentUser.getPhoneNumber());
         return userSummary;
@@ -61,11 +81,34 @@ public class UserController {
     }
 
     @PutMapping("/user/me")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasRole('USER')")
     public UserResponse PutCurrentUser(@CurrentUser UserPrincipal currentUser, @Valid @RequestBody SignUpRequest user)
     {
-        if(passwordEncoder.matches(user.getPassword(), currentUser.getPassword()))
-        {
+            User userSummary =  userRepository.findByEmail(currentUser.getEmail()).get();
+
+            userSummary.setEmail(user.getEmail());
+            userSummary.setFirstName(user.getFirstName());
+            userSummary.setLastName(user.getLastName());
+            userSummary.setPhoneNumber(user.getPhoneNumber());
+
+            userSummary = userRepository.save(userSummary);
+
+            UserResponse userResponse = new UserResponse();
+
+            userResponse.setId(userSummary.getId());
+            userResponse.setFirstName(userSummary.getFirstName());
+            userResponse.setEmail(userSummary.getEmail());
+            userResponse.setLastName(userSummary.getLastName());
+            userResponse.setPhoneNumber(userSummary.getPhoneNumber());
+            userResponse.setUserName(userSummary.getUsername());
+
+            return  userResponse;
+    }
+/*
+    @PutMapping("/user/me")
+    @PreAuthorize("hasRole('USER')")
+    public UserResponse PutCurrentUser(@CurrentUser UserPrincipal currentUser, @Valid @RequestBody SignUpRequest user)
+    {
            User userSummary =  userRepository.findByEmail(currentUser.getEmail()).get();
 
            userSummary.setEmail(user.getEmail());
@@ -77,26 +120,27 @@ public class UserController {
 
             UserResponse userResponse = new UserResponse();
 
-            userResponse.setFirtName(userSummary.getFirstName());
+            userResponse.setFirstName(userSummary.getFirstName());
             userResponse.setEmail(userSummary.getEmail());
             userResponse.setLastName(userSummary.getLastName());
             userResponse.setPhoneNumber(userSummary.getPhoneNumber());
-            userResponse.setUsername(userSummary.getUsername());
+            userResponse.setUserName(userSummary.getUsername());
 
             return  userResponse;
-        }else
-        {
-            throw new BadRequestException("Password Incorrect");
-        }
 
     }
 
 
+
+ */
     @PutMapping("/user/me/password")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasRole('USER')")
     public UserResponse PutCurrentUserPassword(@CurrentUser UserPrincipal currentUser, @Valid @RequestBody PutPasswordField putPasswordField)
     {
-
+        if(putPasswordField.getCurrentPassword() == null || putPasswordField.getNewPassword() == null)
+        {
+            throw new BadRequestException("Password Field is Null");
+        }
         if(passwordEncoder.matches(putPasswordField.getCurrentPassword(), currentUser.getPassword()))
         {
             User userSummary =  userRepository.findByEmail(currentUser.getEmail()).get();
@@ -107,11 +151,11 @@ public class UserController {
 
             UserResponse userResponse = new UserResponse();
 
-            userResponse.setFirtName(userSummary.getFirstName());
+            userResponse.setFirstName(userSummary.getFirstName());
             userResponse.setEmail(userSummary.getEmail());
             userResponse.setLastName(userSummary.getLastName());
             userResponse.setPhoneNumber(userSummary.getPhoneNumber());
-            userResponse.setUsername(userSummary.getUsername());
+            userResponse.setUserName(userSummary.getUsername());
 
             return  userResponse;
 

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
+import org.springframework.lang.Nullable;
 
 import javax.validation.constraints.NotEmpty;
 
@@ -15,8 +16,7 @@ public class CategorieRequest {
     @NotEmpty(message = "Le nom de la categorie est requis")
     private String name;
 
-    @Length(min=3, max=255, message="La description de la catégorie doit compris etre entre 3 et 255 Caracteres")
-    @NotEmpty(message = "La description de la catégorie est requise")
+    @Nullable
     private String description;
 
 }

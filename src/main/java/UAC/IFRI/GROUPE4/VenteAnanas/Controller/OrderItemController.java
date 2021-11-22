@@ -1,17 +1,23 @@
 package UAC.IFRI.GROUPE4.VenteAnanas.Controller;
 
+import UAC.IFRI.GROUPE4.VenteAnanas.Exception.BadRequestException;
 import UAC.IFRI.GROUPE4.VenteAnanas.Exception.ResourceNotFoundException;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.*;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.ModelRequest.OrderItemRequest;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.ModelResponse.OrderItemResponse;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.ModelResponse.ProductResponse;
 import UAC.IFRI.GROUPE4.VenteAnanas.Repository.*;
+import UAC.IFRI.GROUPE4.VenteAnanas.Security.CurrentUser;
+import UAC.IFRI.GROUPE4.VenteAnanas.Security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @CrossOrigin("*")
@@ -30,24 +36,61 @@ public class OrderItemController {
     @Autowired
     UserRepository userRepository;
 
-    @PostMapping("/api/orderItem")
-    public ResponseEntity<OrderItemResponse> saveOrderItem(@Valid @RequestBody OrderItemRequest orderItemRequest)
+
+
+    @GetMapping("/api/orderItems")
+    public ResponseEntity<List<OrderItem>> findAllOrderItemss()
     {
-        Optional<User> user = userRepository.findByEmail(orderItemRequest.getEmail());
+        return new ResponseEntity<>(orderItemRepository.findAll(), HttpStatus.OK);
+    }
+    @GetMapping("/api/orderItem/{id}")
+    public ResponseEntity<OrderItem> findOrderItem(@PathVariable Long id)
+    {
+        Optional<OrderItem> orderItem = orderItemRepository.findById(id);
+        if(orderItem.isPresent())
+        {
+            return new ResponseEntity<>(orderItem.get(), HttpStatus.OK);
+        } else
+        {
+            throw new ResourceNotFoundException("User", "OrderItem", "Not Found");
+        }
+
+    }
+
+    @PostMapping("/api/orderItem")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<OrderItemResponse> saveOrderItem(@CurrentUser UserPrincipal currentUser, @Valid @RequestBody OrderItemRequest orderItemRequest)
+    {
+        String email = currentUser.getEmail();
+        Optional<User> user = userRepository.findByEmail(email);
         Optional<Product> product = productRepository.findByIdAndDeleteAt(orderItemRequest.getId(), false);
         if(user.isPresent() && product.isPresent())
         {
-            Optional<Shop>  shop = shopRepository.findByEmailAndState(orderItemRequest.getEmail(), false);
+            Optional<Shop>  shop = shopRepository.findByEmailAndState(email, false);
             if (!shop.isPresent())
             {
                 Shop shopUser = new Shop();
                 //Shop Object
-                shopUser.setEmail(orderItemRequest.getEmail());
+                shopUser.setEmail(email);
                 shopUser.setState(false);
                 shopUser = shopRepository.save(shopUser);
 
-                shop = shopRepository.findByEmailAndState(orderItemRequest.getEmail(), false);
+                shop = shopRepository.findByEmailAndState(email, false);
             }
+            List<OrderItem> orderItemList = shop.get().getOrderItems();
+            boolean trouver = false;
+            for(OrderItem orderItem : orderItemList)
+            {
+                if(orderItem.getPrice().getProduct().equals(product.get()))
+                {
+                    trouver = true;
+                }
+            }
+            if(trouver)
+            {
+                throw new BadRequestException("Le produit existe deja dans le panier pas");
+            }
+
             OrderItem orderItem = new OrderItem();
 
             orderItem.setQuantity(orderItemRequest.getQuantityProduct());
@@ -65,6 +108,7 @@ public class OrderItemController {
             productResponse.setName(product.get().getName());
             productResponse.setId(product.get().getId());
             productResponse.setMontant(orderItem.getAmont());
+            productResponse.setCategorie(price.get().getCategorie().getName());
             productResponse.setDescription(product.get().getDescription());
 
 
@@ -83,24 +127,28 @@ public class OrderItemController {
 
     }
 
-    @DeleteMapping("/api/user/{email}/orderItem/{id}")
-    public ResponseEntity<?> deleteOrderItemById(@PathVariable String email, @PathVariable Long id)
+    @DeleteMapping("/api/orderItem/{id}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<?> deleteOrderItemById(@CurrentUser UserPrincipal currentUser, @PathVariable Long id)
     {
+        String email = currentUser.getEmail();
         Optional<User> user = userRepository.findByEmail(email);
+
         Optional<OrderItem> orderItem = orderItemRepository.findById(id);
-        if(user.isPresent() && orderItem.isPresent())
+
+        if(orderItem.isPresent() && user.isPresent())
         {
             orderItemRepository.delete(orderItem.get());
             return ResponseEntity.ok().build();
-        }else
+        } else
         {
-            throw  new ResourceNotFoundException("User", "OrderItem", "Le User ou le orderItem n'existe pas!");
+            throw new ResourceNotFoundException("User", "OrderItem", "Le User ou le OrderItem N'existe pas");
         }
 
-    }
 
-    @PutMapping("/api/orderItem/{id}")
-    public ResponseEntity<OrderItemResponse> updateQuantity(@PathVariable Long id, @Valid @RequestBody int quantity)
+    }
+    @PutMapping("/api/orderItem/{id}/quantity/{quantity}")
+    public ResponseEntity<OrderItemResponse> updateQuantity(@PathVariable Long id, @PathVariable int quantity)
     {
         return orderItemRepository.findById(id).map(orderItem -> {
             if(quantity > 0)

@@ -1,19 +1,21 @@
 package UAC.IFRI.GROUPE4.VenteAnanas.Controller;
 
-import UAC.IFRI.GROUPE4.VenteAnanas.Exception.ResourceNotFoundException;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.ModelResponse.OrderItemResponse;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.ModelResponse.ProductResponse;
+import UAC.IFRI.GROUPE4.VenteAnanas.Models.ModelResponse.ShopResponse;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.OrderItem;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.Price;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.Product;
 import UAC.IFRI.GROUPE4.VenteAnanas.Models.Shop;
 import UAC.IFRI.GROUPE4.VenteAnanas.Repository.*;
+import UAC.IFRI.GROUPE4.VenteAnanas.Security.CurrentUser;
+import UAC.IFRI.GROUPE4.VenteAnanas.Security.UserPrincipal;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
@@ -37,21 +39,31 @@ public class ShopController {
     UserRepository userRepository;
 
 
-    @GetMapping("/api/user/{email}/shop")
-    public ResponseEntity<List<OrderItemResponse>> findShopByUserEmail(@PathVariable String email)
+    @GetMapping("/api/user/shop")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ShopResponse> findShopByUserEmail(@CurrentUser UserPrincipal currentUser)
     {
+        ShopResponse shopResponse = new ShopResponse();
+
+        String email  = currentUser.getEmail();
         Optional<Shop> shop = shopRepository.findByEmailAndState(email, false);
         List<OrderItemResponse> ListeOrderItemResponse = new ArrayList<>();
+        Double Amont = 0.0;
+        shopResponse.setEmail(email);
+        shopResponse.setEmail(email);
+        shopResponse.setOrderItems(ListeOrderItemResponse);
+
         if(shop.isPresent())
         {
             List<OrderItem> ListeOI = shop.get().getOrderItems();
             if(ListeOI.isEmpty())
             {
-                return new ResponseEntity<List<OrderItemResponse>>(ListeOrderItemResponse, HttpStatus.OK);
+                return new ResponseEntity<>(shopResponse, HttpStatus.OK);
             }
 
             for(OrderItem orderItem : ListeOI)
             {
+                Amont += orderItem.getAmont();
                 Product p = orderItem.getPrice().getProduct();
                 Price price = priceRepository.findByProductAndActive(p,true).get();
 
@@ -59,6 +71,7 @@ public class ShopController {
                 productResponse.setName(p.getName());
                 productResponse.setId(p.getId());
                 productResponse.setMontant(price.getAmont());
+                productResponse.setCategorie(price.getCategorie().getName());
                 productResponse.setDescription(p.getDescription());
 
 
@@ -71,14 +84,23 @@ public class ShopController {
                 ListeOrderItemResponse.add(orderItemResponse);
             }
 
-            return new ResponseEntity<List<OrderItemResponse>>(ListeOrderItemResponse, HttpStatus.OK);
+
+            Shop sh = shop.get();
+            sh.setAmont(Amont);
+            shopRepository.save(sh);
+
+            
+            shopResponse.setOrderItems(ListeOrderItemResponse);
+            shopResponse.setAmont(Amont);
+
+            return new ResponseEntity<>(shopResponse, HttpStatus.OK);
         }else
         {
             Shop shopUser = new Shop();
             shopUser.setEmail(email);
             shopUser.setState(false);
             shopUser = shopRepository.save(shopUser);
-            return new ResponseEntity<List<OrderItemResponse>>(ListeOrderItemResponse, HttpStatus.OK);
+            return new ResponseEntity<>(shopResponse, HttpStatus.OK);
         }
 
     }

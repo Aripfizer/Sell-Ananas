@@ -34,16 +34,15 @@ public class VenteAnanasApplication {
 		SpringApplication.run(VenteAnanasApplication.class, args);
 	}
 
+
 /*
 	@Bean
-	CommandLineRunner run(AuthController authController) {
-
+	CommandLineRunner run(RoleRepository roleRepository) {
 		return args -> {
-			authController.registerUser(new SignUpRequest("Dossou", "Ariel", "Ariel", "arieldossou00@gmail.com","ariel", "67180009"));
-
+			roleRepository.save(new Role("ROLE_USER"));
+			roleRepository.save(new Role("ROLE_ADMIN"));
 		};
 	}
-
 
  */
 

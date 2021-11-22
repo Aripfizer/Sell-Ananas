@@ -10,16 +10,16 @@ import lombok.NoArgsConstructor;
 public class UserResponse
 {
     private Long id;
-    private String username;
+    private String userName;
     private String lastName;
-    private String firtName;
+    private String firstName;
     private String email;
     private String phoneNumber;
 
     public UserResponse(String username, String lastName, String firtName, String email, String phoneNumber) {
-        this.username = username;
+        this.userName = username;
         this.lastName = lastName;
-        this.firtName = firtName;
+        this.firstName = firtName;
         this.email = email;
         this.phoneNumber = phoneNumber;
     }

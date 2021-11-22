@@ -1,5 +1,6 @@
 package UAC.IFRI.GROUPE4.VenteAnanas.Models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ import javax.persistence.*;
 @Data
 @Table(name = "roles")
 public class Role {
+    @JsonIgnore
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
