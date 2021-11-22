@@ -34,7 +34,7 @@ public class VenteAnanasApplication {
 		SpringApplication.run(VenteAnanasApplication.class, args);
 	}
 
-
+/*
 	@Bean
 	CommandLineRunner run(RoleRepository roleRepository, UserRepository userRepository) {
 		return args -> {
@@ -53,5 +53,7 @@ public class VenteAnanasApplication {
 		};
 	}
 
+
+ */
 
 }
