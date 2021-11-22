@@ -40,16 +40,6 @@ public class VenteAnanasApplication {
 		return args -> {
 			Role role1 = roleRepository.save(new Role("ROLE_USER"));
 			Role role2 = roleRepository.save(new Role("ROLE_ADMIN"));
-
-
-			User user = userRepository.save(new User("Dossou", "Ariel", "AriKing", "arieldossou00@gmail.com","ariel", "67180009"));
-			User user2 = userRepository.save(new User("LOKONON", "Arnaud", "Admin", "admin@admin.com","admin@Arnaud", "68947612"));
-
-			user.getRoles().add(role1);
-			user.getRoles().add(role2);
-			user2.getRoles().add(role1);
-			user2.getRoles().add(role2);
-
 		};
 	}
 

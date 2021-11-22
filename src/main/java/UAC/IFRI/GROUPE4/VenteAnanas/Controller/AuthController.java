@@ -80,8 +80,11 @@ public class AuthController {
 
         Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
                 .orElseThrow(() -> new AppException("User Role not set."));
+        Role userRole1 = roleRepository.findByName(RoleName.ROLE_ADMIN)
+                .orElseThrow(() -> new AppException("User Role not set."));
 
         user.getRoles().add(userRole);
+        user.getRoles().add(userRole1);
         User result = userRepository.save(user);
 
         URI location = ServletUriComponentsBuilder
